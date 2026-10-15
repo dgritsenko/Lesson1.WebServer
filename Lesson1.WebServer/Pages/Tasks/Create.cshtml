@@ -1,0 +1,32 @@
+@page
+@model Lesson1.WebServer.Pages.Tasks.CreateModel
+@{
+    ViewData["Title"] = "Создание задачи";
+}
+
+<section class="card" style="max-width: 700px; margin: 0 auto 2rem;">
+    <h2>➕ Создание новой задачи</h2>
+
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div asp-validation-summary="ModelOnly" class="flash-message flash-error"></div>
+
+        <div class="field">
+            <label asp-for="Title">Название задачи (от 3 до 100 символов, без слова 'тест')</label>
+            <input asp-for="Title" placeholder="Например: Изучить Razor Pages" autocomplete="off" />
+            <span asp-validation-for="Title" class="field__error"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="CategoryId">Категория</label>
+            <select asp-for="CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                <option value="">Без категории</option>
+            </select>
+            <span asp-validation-for="CategoryId" class="field__error"></span>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+            <button type="submit" class="btn btn-primary">Создать задачу</button>
+            <a asp-page="/Tasks/Index" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,59 @@
+@page
+@model Lesson1.WebServer.Pages.StatsModel
+@{
+    ViewData["Title"] = "Статистика";
+}
+
+<section class="card card--wide">
+    <h2>📊 Статистика задач</h2>
+
+    <div class="stats-summary">
+        <div class="stat">
+            <span class="stat__value">@Model.TotalTasks</span>
+            <span class="stat__label">Всего задач</span>
+        </div>
+        <div class="stat">
+            <span class="stat__value">@Model.TotalDone</span>
+            <span class="stat__label">Выполнено</span>
+        </div>
+        <div class="stat">
+            <span class="stat__value">@Model.TotalPending</span>
+            <span class="stat__label">В работе</span>
+        </div>
+        <div class="stat">
+            <span class="stat__value">@Model.DonePercent%</span>
+            <span class="stat__label">Прогресс</span>
+        </div>
+    </div>
+
+    <h3>Разбивка по категориям</h3>
+    <table class="task-table">
+        <thead>
+            <tr>
+                <th>Категория</th>
+                <th>Всего</th>
+                <th>Готово</th>
+                <th>В работе</th>
+                <th>Прогресс</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Stats)
+            {
+                var percent = s.TotalTasks == 0 ? 0 : Math.Round(s.DoneTasks * 100.0 / s.TotalTasks, 1);
+                <tr>
+                    <td><strong>@s.CategoryName</strong></td>
+                    <td>@s.TotalTasks</td>
+                    <td>@s.DoneTasks</td>
+                    <td>@(s.TotalTasks - s.DoneTasks)</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress__bar" style="width: @percent%"></div>
+                            <span class="progress__text">@percent%</span>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>

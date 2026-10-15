@@ -1,0 +1,123 @@
+@page
+@model Lesson1.WebServer.Pages.Tasks.IndexModel
+@{
+    ViewData["Title"] = "Задачи";
+}
+
+<section class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <h2 style="border: none; margin: 0; padding: 0;">📝 Список задач</h2>
+        <a asp-page="/Tasks/Create" class="btn btn-primary">+ Создать задачу</a>
+    </div>
+
+    <!-- Фильтрация и сортировка -->
+    <form method="get" class="filter-bar">
+        <div class="field grow">
+            <label for="categoryId">Категория</label>
+            <select id="categoryId" asp-for="CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                <option value="">Все категории</option>
+            </select>
+        </div>
+        <div class="field grow">
+            <label for="sortBy">Сортировка</label>
+            <select id="sortBy" asp-for="SortBy">
+                <option value="created">По дате создания (новые)</option>
+                <option value="title">По названию (А-Я)</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+            <button type="submit" class="btn btn-primary">Применить</button>
+            <a asp-page="/Tasks/Index" class="btn btn-secondary">Сбросить</a>
+        </div>
+    </form>
+
+    <div class="reference__note" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 0;">
+        <span>Всего задач: <strong>@Model.TotalCount</strong></span>
+        <span>Страница <strong>@Model.CurrentPage</strong> из <strong>@(Model.TotalPages == 0 ? 1 : Model.TotalPages)</strong></span>
+    </div>
+
+    <!-- Список задач -->
+    <div style="overflow-x: auto;">
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Название</th>
+                    <th style="width: 140px;">Категория</th>
+                    <th style="width: 130px;">Статус</th>
+                    <th style="width: 150px;">Создана</th>
+                    <th style="width: 180px; text-align: right;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in Model.Items)
+                {
+                    <tr class="@(task.IsDone ? "task--done" : "")">
+                        <td><strong>#@task.Id</strong></td>
+                        <td style="font-weight: 500;">@task.Title</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(task.CategoryName) && task.CategoryName != "Без категории")
+                            {
+                                <span class="badge badge--category">@task.CategoryName</span>
+                            }
+                            else
+                            {
+                                <span class="badge">Без категории</span>
+                            }
+                        </td>
+                        <td>
+                            <form method="post" asp-page-handler="Toggle" asp-route-id="@task.Id" style="display: inline;">
+                                <input type="hidden" name="isDone" value="@(!task.IsDone)" />
+                                <button type="submit" class="btn btn--small @(task.IsDone ? "btn-secondary" : "btn-primary")" title="Нажмите для переключения">
+                                    @(task.IsDone ? "↩ Вернуть" : "✔ Готово")
+                                </button>
+                            </form>
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">
+                            @task.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                                <a asp-page="/Tasks/Edit" asp-route-id="@task.Id" class="btn btn-secondary btn--small">Изменить</a>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@task.Id" onsubmit="return confirm('Удалить задачу #@task.Id «@task.Title»?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn--small">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="task-list__empty">
+                            Задачи не найдены. <a asp-page="/Tasks/Create">Создать первую задачу</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Пагинация -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <a class="btn @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary") btn--small"
+                   asp-page="/Tasks/Index"
+                   asp-route-currentPage="@i"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-sortBy="@Model.SortBy">
+                    @i
+                </a>
+            }
+        </nav>
+    }
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+        <a asp-page="/Categories/Index" class="btn btn-secondary">📁 Управление категориями</a>
+        <a asp-page="/Stats" class="btn btn-secondary">📊 Статистика</a>
+    </div>
+</section>

@@ -1,0 +1,82 @@
+@page
+@model Lesson1.WebServer.Pages.Categories.IndexModel
+@{
+    ViewData["Title"] = "Категории";
+}
+
+<section class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 style="border: none; margin: 0; padding: 0;">📁 Управление категориями</h2>
+        <a asp-page="/Tasks/Index" class="btn btn-secondary">← К списку задач</a>
+    </div>
+
+    <!-- Таблица категорий -->
+    <div style="overflow-x: auto;">
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">ID</th>
+                    <th>Название категории</th>
+                    <th style="width: 130px; text-align: center;">Связано задач</th>
+                    <th style="width: 220px; text-align: right;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in Model.Categories)
+                {
+                    <tr>
+                        <td><strong>#@category.Id</strong></td>
+                        <td>
+                            @if (Model.EditId == category.Id)
+                            {
+                                <form method="post" asp-page-handler="Update" style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <input type="hidden" name="editId" value="@category.Id" />
+                                    <input type="text" name="editName" value="@category.Name" style="max-width: 260px;" required minlength="2" maxlength="50" />
+                                    <button type="submit" class="btn btn-primary btn--small">Сохранить</button>
+                                    <a asp-page="/Categories/Index" class="btn btn-secondary btn--small">Отмена</a>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="font-weight: 600; font-size: 1rem;">@category.Name</span>
+                            }
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge badge--category">@category.Tasks.Count</span>
+                        </td>
+                        <td>
+                            @if (Model.EditId != category.Id)
+                            {
+                                <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                                    <a asp-page="/Categories/Index" asp-route-editId="@category.Id" class="btn btn-secondary btn--small">Переименовать</a>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@category.Id" onsubmit="return confirm('Удалить категорию «@category.Name»? Связанные задачи не удалятся (CategoryId станет null).');" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn--small">Удалить</button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Categories.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="task-list__empty">Категорий пока нет</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Добавление категории -->
+    <h3 style="margin-top: 2rem;">➕ Добавить новую категорию</h3>
+    <form method="post" asp-page-handler="Create" class="row" style="margin-top: 0.75rem;">
+        <div class="field grow">
+            <input type="text" name="newCategoryName" placeholder="Название новой категории (например: Здоровье, Хобби...)" required minlength="2" maxlength="50" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-primary">Создать категорию</button>
+    </form>
+
+    <div class="reference__note">
+        ℹ️ <strong>DeleteBehavior.SetNull</strong>: при удалении категории связанные задачи не удаляются — их <code>CategoryId</code> автоматически сбрасывается в <code>null</code>.
+    </div>
+</section>

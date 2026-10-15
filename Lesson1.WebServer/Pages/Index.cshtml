@@ -1,0 +1,262 @@
+@page
+@model Lesson1.WebServer.Pages.IndexModel
+@{
+    ViewData["Title"] = "Главная — SPA & AJAX";
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.75rem;">Интерактивная панель (AJAX & SPA)</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Все запросы на этой странице выполняются асинхронно через fetch без перезагрузки страницы.</p>
+    </div>
+    <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="spa-status">AJAX-клиент готов</span>
+    </div>
+</div>
+
+<!-- 1. Сводка задач (SSR + динамическое обновление) -->
+<section class="card">
+    <h2>📊 Сводка задач</h2>
+    <div class="stats-summary">
+        <div class="stat">
+            <span class="stat__value" id="stat-tasks">@Model.TaskCount</span>
+            <span class="stat__label">Всего задач</span>
+        </div>
+        <div class="stat">
+            <span class="stat__value" id="stat-done" style="color: #3fb950;">@Model.DoneCount</span>
+            <span class="stat__label">Выполнено</span>
+        </div>
+        <div class="stat">
+            <span class="stat__value" id="stat-cats" style="color: var(--accent-blue);">@Model.CategoryCount</span>
+            <span class="stat__label">Категорий</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a asp-page="/Tasks/Index" class="btn btn-primary">Перейти к задачам (SSR) →</a>
+        <a asp-page="/Stats" class="btn btn-secondary">Подробная статистика</a>
+    </div>
+</section>
+
+<!-- 2. Калькулятор сложения (GET /api/sum) через AJAX -->
+<section class="card">
+    <h2>🧮 Сложение чисел (GET /api/sum)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Отправляет AJAX GET-запрос с query-параметрами <code>?a=...&b=...</code>.
+    </p>
+    <div class="row">
+        <div class="field" style="width: 140px;">
+            <label for="sum-a">Число A</label>
+            <input type="number" step="any" id="sum-a" value="8" />
+        </div>
+        <div class="field" style="width: 140px;">
+            <label for="sum-b">Число B</label>
+            <input type="number" step="any" id="sum-b" value="4" />
+        </div>
+        <button type="button" id="btn-sum" class="btn btn-primary">
+            <span>Вычислить сумму</span>
+        </button>
+    </div>
+    <div id="sum-output" style="margin-top: 1rem;"></div>
+</section>
+
+<!-- 3. Деление чисел (GET /api/divide) через AJAX -->
+<section class="card">
+    <h2>🔁 Деление чисел (GET /api/divide)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Обработка краевых случаев: деление на ноль возвращает код 400 и ошибку в формате Error Envelope.
+    </p>
+    <div class="row">
+        <div class="field" style="width: 140px;">
+            <label for="div-a">Делимое (A)</label>
+            <input type="number" step="any" id="div-a" value="10" />
+        </div>
+        <div class="field" style="width: 140px;">
+            <label for="div-b">Делитель (B)</label>
+            <input type="number" step="any" id="div-b" value="2" />
+        </div>
+        <button type="button" id="btn-divide" class="btn btn-primary">
+            <span>Разделить</span>
+        </button>
+    </div>
+    <div id="div-output" style="margin-top: 1rem;"></div>
+</section>
+
+<!-- 4. Эхо-тест (POST /api/echo) через AJAX -->
+<section class="card">
+    <h2>💬 Эхо-сервис (POST /api/echo)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Отправляет JSON <code>{ "text": "..." }</code> методом POST и получает обратно анализ строки.
+    </p>
+    <div class="row">
+        <div class="field grow">
+            <label for="echo-text">Текст сообщения</label>
+            <input type="text" id="echo-text" value="Привет из Razor SPA!" placeholder="Введите текст..." />
+        </div>
+        <button type="button" id="btn-echo" class="btn btn-primary">
+            <span>Отправить в эхо</span>
+        </button>
+    </div>
+    <div id="echo-output" style="margin-top: 1rem;"></div>
+</section>
+
+<!-- 5. Живой поиск задач (GET /api/tasks/search) с AbortController -->
+<section class="card">
+    <h2>🔍 Живой поиск задач (AJAX + AbortController)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Запросы отправляются на лету. Быстрый набор отменяет предыдущие не завершённые запросы через AbortController.
+    </p>
+    <div class="field" style="margin-bottom: 1rem;">
+        <label for="search-input">Поиск по названию</label>
+        <input type="search" id="search-input" placeholder="Начните вводить название задачи..." autocomplete="off" />
+    </div>
+    <div id="search-output">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Введите минимум 1 символ для живого поиска.</p>
+    </div>
+</section>
+
+@section Scripts {
+<script type="module">
+import { api, apiRequest, createSearchApi } from '/js/api-client.js';
+
+const statusEl = document.getElementById('spa-status');
+function setStatus(text) {
+    if (statusEl) statusEl.textContent = text;
+}
+
+// 1. Сложение (GET /api/sum)
+const btnSum = document.getElementById('btn-sum');
+const sumA = document.getElementById('sum-a');
+const sumB = document.getElementById('sum-b');
+const sumOutput = document.getElementById('sum-output');
+
+btnSum?.addEventListener('click', async () => {
+    const a = sumA.value;
+    const b = sumB.value;
+    btnSum.disabled = true;
+    btnSum.innerText = 'Считаем...';
+    setStatus('Отправка GET /api/sum...');
+
+    try {
+        const res = await api.sum(a, b);
+        if (res.ok) {
+            sumOutput.innerHTML = `<div class="message message--success">Результат: <strong>${res.payload.a} + ${res.payload.b} = ${res.payload.result}</strong></div>`;
+            setStatus('GET /api/sum выполнен успешно');
+        } else {
+            sumOutput.innerHTML = `<div class="message message--error">Ошибка: ${res.error}</div>`;
+            setStatus('Ошибка при вычислении суммы');
+        }
+    } finally {
+        btnSum.disabled = false;
+        btnSum.innerText = 'Вычислить сумму';
+    }
+});
+
+// 2. Деление (GET /api/divide)
+const btnDiv = document.getElementById('btn-divide');
+const divA = document.getElementById('div-a');
+const divB = document.getElementById('div-b');
+const divOutput = document.getElementById('div-output');
+
+btnDiv?.addEventListener('click', async () => {
+    const a = divA.value;
+    const b = divB.value;
+    btnDiv.disabled = true;
+    btnDiv.innerText = 'Делим...';
+    setStatus('Отправка GET /api/divide...');
+
+    try {
+        const res = await api.divide(a, b);
+        if (res.ok) {
+            const formatted = typeof res.payload.quotient === 'number' ? res.payload.quotient.toFixed(4) : res.payload.quotient;
+            divOutput.innerHTML = `<div class="message message--success">Результат: <strong>${res.payload.dividend} / ${res.payload.divisor} = ${formatted}</strong></div>`;
+            setStatus('GET /api/divide выполнен успешно');
+        } else {
+            divOutput.innerHTML = `<div class="message message--error">Ошибка: ${res.error}</div>`;
+            setStatus('Ошибка при делении');
+        }
+    } finally {
+        btnDiv.disabled = false;
+        btnDiv.innerText = 'Разделить';
+    }
+});
+
+// 3. Эхо (POST /api/echo)
+const btnEcho = document.getElementById('btn-echo');
+const echoText = document.getElementById('echo-text');
+const echoOutput = document.getElementById('echo-output');
+
+btnEcho?.addEventListener('click', async () => {
+    const text = echoText.value;
+    btnEcho.disabled = true;
+    btnEcho.innerText = 'Отправляем...';
+    setStatus('Отправка POST /api/echo...');
+
+    try {
+        const res = await api.echo(text);
+        if (res.ok) {
+            echoOutput.innerHTML = `
+                <div class="message message--success" style="padding: 1rem;">
+                    <table style="width: 100%;">
+                        <tr><td style="color: var(--text-muted); width: 140px;">Оригинал:</td><td><strong>${res.payload.original}</strong></td></tr>
+                        <tr><td style="color: var(--text-muted);">В верхнем регистре:</td><td><strong>${res.payload.uppercase}</strong></td></tr>
+                        <tr><td style="color: var(--text-muted);">Символов:</td><td><strong>${res.payload.length}</strong></td></tr>
+                    </table>
+                </div>`;
+            setStatus('POST /api/echo выполнен');
+        } else {
+            echoOutput.innerHTML = `<div class="message message--error">Ошибка: ${res.error}</div>`;
+            setStatus('Ошибка в эхо-сервисе');
+        }
+    } finally {
+        btnEcho.disabled = false;
+        btnEcho.innerText = 'Отправить в эхо';
+    }
+});
+
+// 4. Живой поиск с AbortController
+const searchInput = document.getElementById('search-input');
+const searchOutput = document.getElementById('search-output');
+const searchTasks = createSearchApi('/api/tasks/search');
+
+searchInput?.addEventListener('input', async (e) => {
+    const q = e.target.value.trim();
+    if (!q) {
+        searchOutput.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Введите минимум 1 символ для живого поиска.</p>';
+        setStatus('Ожидание ввода поиска...');
+        return;
+    }
+
+    setStatus(`Поиск: "${q}"...`);
+    const res = await searchTasks(q);
+    if (res.aborted) {
+        return; // Запрос был отменён новым вводом, ничего не делаем
+    }
+
+    if (res.ok) {
+        const items = res.payload || [];
+        if (items.length === 0) {
+            searchOutput.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Ничего не найдено.</p>';
+        } else {
+            searchOutput.innerHTML = `
+                <table class="task-table">
+                    <thead><tr><th>ID</th><th>Название</th><th>Категория</th><th>Статус</th></tr></thead>
+                    <tbody>
+                        ${items.map(t => `
+                            <tr class="${t.isDone ? 'task--done' : ''}">
+                                <td>#${t.id}</td>
+                                <td>${t.title}</td>
+                                <td><span class="badge badge--category">${t.categoryName || 'Без категории'}</span></td>
+                                <td>${t.isDone ? '<span class="badge badge--done">Готово</span>' : '<span class="badge badge--pending">В работе</span>'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+        setStatus(`Найдено задач: ${items.length}`);
+    } else {
+        searchOutput.innerHTML = `<div class="message message--error">Ошибка поиска: ${res.error}</div>`;
+    }
+});
+</script>
+}

@@ -1,0 +1,70 @@
+@inject Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper Html
+@{
+    var currentPath = ViewContext.HttpContext.Request.Path.Value?.TrimEnd('/') ?? "";
+    if (string.IsNullOrEmpty(currentPath))
+    {
+        currentPath = "/";
+    }
+
+    string ActiveClass(string pagePath)
+    {
+        if (pagePath == "/" && (currentPath == "/" || currentPath == ""))
+            return "nav-link active";
+        if (pagePath != "/" && currentPath.StartsWith(pagePath, StringComparison.OrdinalIgnoreCase))
+            return "nav-link active";
+        return "nav-link";
+    }
+
+    var title = ViewData["Title"] as string ?? "Task Manager — Razor Pages & Minimal API";
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@title</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<header class="header-stripe">
+    <div class="header-content">
+        <div>
+            <span class="site-title">📋 Task Manager</span>
+            <p class="site-subtitle">ASP.NET Core • SQLite • Razor Pages • Minimal API</p>
+        </div>
+        <nav class="nav-menu">
+            <a class="@ActiveClass("/")" asp-page="/Index">Главная (SPA)</a>
+            <a class="@ActiveClass("/Tasks")" asp-page="/Tasks/Index">Задачи (SSR)</a>
+            <a class="@ActiveClass("/Categories")" asp-page="/Categories/Index">Категории</a>
+            <a class="@ActiveClass("/Stats")" asp-page="/Stats">Статистика</a>
+            <a class="@ActiveClass("/About")" asp-page="/About">О системе</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="flash-message flash-success">✓ @success</div>
+    }
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="flash-message flash-error">⚠ @error</div>
+    }
+
+    @RenderBody()
+</main>
+
+<footer>
+    <div style="max-width: 1100px; margin: 0 auto;">
+        <p>© @(DateTime.Now.Year) Task Manager — ASP.NET Core &amp; Razor Pages (Code-First SQLite)</p>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

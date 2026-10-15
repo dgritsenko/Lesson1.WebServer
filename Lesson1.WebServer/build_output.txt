@@ -1,0 +1,11 @@
+  Определение проектов для восстановления...
+  Все проекты обновлены для восстановления.
+C:\For_Work\CS\Lesson1.WebServer\Lesson1.WebServer\Program.cs(42,20): error CS0246: Не удалось найти тип или имя пространства имен "TaskItem" (возможно, отсутствует директива using или ссылка на сборку). [C:\For_Work\CS\Lesson1.WebServer\Lesson1.WebServer\Lesson1.WebServer.csproj]
+
+Ошибка сборки.
+
+C:\For_Work\CS\Lesson1.WebServer\Lesson1.WebServer\Program.cs(42,20): error CS0246: Не удалось найти тип или имя пространства имен "TaskItem" (возможно, отсутствует директива using или ссылка на сборку). [C:\For_Work\CS\Lesson1.WebServer\Lesson1.WebServer\Lesson1.WebServer.csproj]
+    Предупреждений: 0
+    Ошибок: 1
+
+Прошло времени 00:00:01.27

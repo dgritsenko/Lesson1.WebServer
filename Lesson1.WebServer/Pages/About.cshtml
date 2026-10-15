@@ -1,0 +1,34 @@
+@page
+@model Lesson1.WebServer.Pages.AboutModel
+@{
+    ViewData["Title"] = "О сервере";
+}
+
+<section class="card card--wide">
+    <h2>ℹ️ О сервере</h2>
+
+    <table class="task-table">
+        <tbody>
+            <tr>
+                <td><strong>Имя сервера:</strong></td>
+                <td>@Model.ServerInfo.ServerName</td>
+            </tr>
+            <tr>
+                <td><strong>Версия:</strong></td>
+                <td>@Model.ServerInfo.Version</td>
+            </tr>
+            <tr>
+                <td><strong>Текущее время:</strong></td>
+                <td>@Model.ServerInfo.CurrentTime.ToString("dd.MM.yyyy HH:mm:ss")</td>
+            </tr>
+            <tr>
+                <td><strong>Версия .NET:</strong></td>
+                <td>@Environment.Version.ToString()</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p class="reference__note" style="margin-top: 1.5rem;">
+        Task Manager построен на ASP.NET Core с использованием EF Core Code-First, Minimal API и Razor Pages.
+    </p>
+</section>
