@@ -1,0 +1,21 @@
+# .NET build output
+bin/
+obj/
+
+# SQLite database (создаётся автоматически при запуске)
+*.db
+*.db-shm
+*.db-wal
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
